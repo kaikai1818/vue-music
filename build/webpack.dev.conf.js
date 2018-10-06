@@ -9,6 +9,13 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
+// 后端代理
+// const express = require('express')
+// const axios = require('axios')
+// const app = express()
+// var apiRoutes = express.Router()
+// app.use('/api', apiRoutes)
+
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
