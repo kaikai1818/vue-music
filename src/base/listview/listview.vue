@@ -3,6 +3,7 @@
           :data="data"
           :listenScroll="listenScroll"
           ref="listview"
+          :probeType="probeType"
           @scroll="scroll"
   >
     <ul>
@@ -18,10 +19,18 @@
     </ul>
     <div class="list-shortcut" @touchstart="onShortcutTouchStart" @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
-        <li v-for="(item, index) in shortcutList" :key="index" class="item" :data-index="index">
+        <li v-for="(item, index) in shortcutList"
+           :key="index"
+           class="item"
+           :class="{'current' : currentIndex === index}"
+           :data-index="index"
+           >
           {{item}}
         </li>
       </ul>
+    </div>
+    <div class="list-fixed" v-show="fixedTitle">
+      <h1 class="fixed-title">{{fixedTitle}}</h1>
     </div>
   </Scroll>
 </template>
@@ -47,6 +56,7 @@ export default {
     this.touch = {}
     this.listenScroll = true
     this.listHeight = []
+    this.probeType = 3
   },
   methods: {
     onShortcutTouchStart(e) {
@@ -67,6 +77,15 @@ export default {
       this.scrollY = pos.y
     },
     _scrollTo(index) {
+      if (!index && index !== 0) {
+        return
+      }
+      if (index < 0) {
+        index = 0
+      } else if (index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2
+      }
+      this.scrollY = -this.listHeight[index]
       this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
     },
     _calculateHeight() {
@@ -76,7 +95,7 @@ export default {
       this.listHeight.push(height)
       for (let i = 0; i < list.length; i++) {
         let item = list[i]
-        height = item.clientHeight
+        height += item.clientHeight
         this.listHeight.push(height)
       }
     }
@@ -89,16 +108,22 @@ export default {
     },
     scrollY(newY) {
       const listHeight = this.listHeight
-      for (let i = 0; i < listHeight.length; i++) {
+      // 当滚动到顶部
+      if (newY > 0) {
+        this.currentIndex = 0
+        return
+      }
+      // 在中间
+      for (let i = 0; i < listHeight.length - 1; i++) {
         let height1 = listHeight[i]
         let height2 = listHeight[i + 1]
-        if (!height2 || (-newY > height1 && -newY < height2)) {
+        if (-newY >= height1 && -newY < height2) {
           this.currentIndex = i
-          console.log(this.currentIndex)
           return
         }
       }
-      this.currentIndex = 0
+      // 当滚动到底部
+      this.currentIndex = this.listHeight - 2
     }
   },
   computed: {
@@ -106,6 +131,9 @@ export default {
       return this.data.map((group) => {
         return group.title.substr(0, 1)
       })
+    },
+    fixedTitle() {
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : null
     }
   },
   components: {
